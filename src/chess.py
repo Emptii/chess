@@ -1,3 +1,13 @@
+class move:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+        self.start_index = translate_to_index(self.start)
+        self.end_index = translate_to_index(self.end)
+
+    def __str__(self):
+        return "{}-{}".format(self.start, self.end)
+
 
 class player:
     def __init__(self, name, color):
@@ -8,24 +18,15 @@ class player:
     def make_move(self, board):
         print("Make a move, {}!".format(self.name))
         move_str = input("Move: ")
-        move = move(move_str.split(" "))
-        return move
+        m = move(move_str.split(" ")[0], move_str.split(" ")[1])
+        return m
 
 
 def translate_to_index(position):
-    return position.translate(
-        str.maketrans("abcdefgh", "01234567"))
+    positions = [*position.translate(
+        str.maketrans("abcdefgh", "01234567"))]
 
-
-class move:
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-        self.start_index = translate_to_index(self.start)
-        self.end_index = translate_to_index(self.end)
-
-    def __str__(self):
-        return "{}-{}".format(self.start, self.end)
+    return [int(positions[1])-1, int(positions[0])]
 
 
 class piece:
@@ -76,8 +77,13 @@ class board:
         self.board[piece.position_index[0]
                    ][piece.position_index[1]] = piece
 
-    def check_move(self, move):
-        return True
+    def move_piece(self, start_index, end_index):
+        piece = self.board[start_index[0]][start_index[1]]
+        self.board[end_index[0]][end_index[1]] = piece
+        self.board[start_index[0]][start_index[1]] = None
+
+    def get_figure(self, position):
+        return self.board[position[0]][position[1]]
 
     def print_board(self):
         for i in range(8):
@@ -132,8 +138,40 @@ class game:
     def check_win(self):
         pass
 
+    def check_move(self, move):
+        if move.start_index[0] < 0 or \
+                move.start_index[0] > 7 or \
+                move.start_index[1] < 0 or \
+                move.start_index[1] > 7 or \
+                move.end_index[0] < 0 or \
+                move.end_index[0] > 7 or \
+                move.end_index[1] < 0 or \
+                move.end_index[1] > 7:
+            print("Invalid move")
+            return False
+
+        if self.board.get_figure(move.start_index) == None:
+            print("Invalid move")
+            return False
+
+        if self.board.get_figure(move.start_index).color != self.whos_turn.color:
+            print("Invalid move")
+            return False
+
+        return True
+
+    def get_legal_moves():
+        pass
+
+    def execute_move(self, move):
+        self.board.move_piece(move.start_index, move.end_index)
+
     def turn(self):
-        self.whos_turn.make_move(self.board)
+        player_move = self.whos_turn.make_move(self.board)
+        if self.check_move(player_move):
+            self.execute_move(player_move)
+        else:
+            return
         self.check_win()
         self.whos_turn = self.player2 if self.whos_turn == self.player1 else self.player1
 
